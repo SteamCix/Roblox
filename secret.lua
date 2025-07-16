@@ -1,306 +1,122 @@
--- Kira Hack Troll - Executor uyumlu tam script
-local Players = game:GetService("Players")
-local Lighting = game:GetService("Lighting")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+-- [[ Kira Hack Troll - Tüm sistem tek dosyada (Server + Client) ]] --
 
--- Kırmızı ekran oluşturma (Kira seçilince)
-local function createRedScreen()
-    local redScreen = Instance.new("ScreenGui", PlayerGui)
-    redScreen.Name = "KiraRedScreen"
+-- Bu kısmı SERVER tarafına (ServerScriptService) koy -- if game:GetService("RunService"):IsServer() then local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-    local frame = Instance.new("Frame", redScreen)
-    frame.Size = UDim2.new(1,0,1,0)
-    frame.BackgroundColor3 = Color3.fromRGB(20,0,0)
-    frame.BorderColor3 = Color3.fromRGB(255,0,0)
-    frame.BorderSizePixel = 5
-    frame.BackgroundTransparency = 0.2
+local Remote = Instance.new("RemoteEvent")
+Remote.Name = "KiraRemote"
+Remote.Parent = ReplicatedStorage
 
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(1,0,0.1,0)
-    label.Position = UDim2.new(0,0,0,10)
-    label.Text = "Kira Troll Mode Activated"
-    label.TextColor3 = Color3.fromRGB(255,0,0)
-    label.TextScaled = true
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.GothamBold
-
-    return redScreen
-end
-
--- Skybox ayarlama
-local function setTrollSkybox()
-    for _, child in pairs(Lighting:GetChildren()) do
-        if child:IsA("Sky") and child.Name == "KiraTrollSkybox" then
-            child:Destroy()
-        end
-    end
-    local sky = Instance.new("Sky")
-    sky.Name = "KiraTrollSkybox"
-    local id = "90269177738915"
-    for _, face in pairs({"Bk","Dn","Ft","Lf","Rt","Up"}) do
-        sky["Skybox"..face] = "rbxassetid://"..id
-    end
-    sky.Parent = Lighting
-end
-
--- Fly mekanizması
-local Fly = {Enabled = false}
-local FlySpeed = 100
-
-function Fly:Start()
-    if self.Enabled then return end
-    self.Enabled = true
-
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-
-    local bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.MaxForce = Vector3.new(1e5,1e5,1e5)
-    bodyVelocity.Velocity = Vector3.new(0,0,0)
-    bodyVelocity.Parent = humanoidRootPart
-
-    local runService = game:GetService("RunService")
-
-    local conn
-    conn = runService.Heartbeat:Connect(function()
-        if not self.Enabled then
-            bodyVelocity:Destroy()
-            conn:Disconnect()
-            return
-        end
-
-        local direction = Vector3.new(0,0,0)
-        local camera = workspace.CurrentCamera
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            direction = direction + camera.CFrame.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            direction = direction - camera.CFrame.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            direction = direction - camera.CFrame.RightVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            direction = direction + camera.CFrame.RightVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-            direction = direction + Vector3.new(0,1,0)
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-            direction = direction - Vector3.new(0,1,0)
-        end
-
-        if direction.Magnitude > 0 then
-            bodyVelocity.Velocity = direction.Unit * FlySpeed
-        else
-            bodyVelocity.Velocity = Vector3.new(0,0,0)
-        end
-    end)
-end
-
-function Fly:Stop()
-    self.Enabled = false
-end
-
--- GUI oluşturma
-local function createGUI()
-    local screenGui = Instance.new("ScreenGui", PlayerGui)
-    screenGui.Name = "KiraHackTroll"
-
-    local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(0, 400, 0, 400)
-    frame.Position = UDim2.new(0.5, -200, 0.5, -200)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    frame.BorderSizePixel = 0
-    frame.Active = true
-    frame.Draggable = true
-
-    local title = Instance.new("TextLabel", frame)
-    title.Size = UDim2.new(1, 0, 0, 40)
-    title.BackgroundTransparency = 1
-    title.Text = "Kira Hack Troll"
-    title.Font = Enum.Font.GothamBold
-    title.TextScaled = true
-    title.TextColor3 = Color3.fromRGB(255, 0, 0)
-    title.Position = UDim2.new(0, 0, 0, 0)
-
-    -- Açılış sorusu
-    local questionFrame = Instance.new("Frame", frame)
-    questionFrame.Size = UDim2.new(1, -20, 0, 70)
-    questionFrame.Position = UDim2.new(0, 10, 0, 50)
-    questionFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    questionFrame.BorderSizePixel = 0
-    questionFrame.Visible = true
-
-    local questionLabel = Instance.new("TextLabel", questionFrame)
-    questionLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    questionLabel.Position = UDim2.new(0, 0, 0, 0)
-    questionLabel.BackgroundTransparency = 1
-    questionLabel.Text = "Hangi kraldansın?"
-    questionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    questionLabel.TextScaled = true
-    questionLabel.Font = Enum.Font.GothamBold
-
-    local memoButton = Instance.new("TextButton", questionFrame)
-    memoButton.Size = UDim2.new(0.4, 0, 0.5, -10)
-    memoButton.Position = UDim2.new(0.05, 0, 0.5, 5)
-    memoButton.Text = "Memo"
-    memoButton.Font = Enum.Font.GothamBold
-    memoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    memoButton.TextScaled = true
-    memoButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-
-    local kiraButton = Instance.new("TextButton", questionFrame)
-    kiraButton.Size = UDim2.new(0.4, 0, 0.5, -10)
-    kiraButton.Position = UDim2.new(0.55, 0, 0.5, 5)
-    kiraButton.Text = "Kira"
-    kiraButton.Font = Enum.Font.GothamBold
-    kiraButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    kiraButton.TextScaled = true
-    kiraButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-
-    -- Ana panel (başlangıçta gizli)
-    local mainPanel = Instance.new("Frame", frame)
-    mainPanel.Size = UDim2.new(1, -20, 1, -140)
-    mainPanel.Position = UDim2.new(0, 10, 0, 130)
-    mainPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    mainPanel.BorderSizePixel = 0
-    mainPanel.Visible = false
-
-    -- Local Player başlığı
-    local localPlayerLabel = Instance.new("TextLabel", mainPanel)
-    localPlayerLabel.Size = UDim2.new(0.45, 0, 0, 40)
-    localPlayerLabel.Position = UDim2.new(0, 0, 0, 0)
-    localPlayerLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    localPlayerLabel.Text = "Local Player"
-    localPlayerLabel.Font = Enum.Font.GothamBold
-    localPlayerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    localPlayerLabel.TextScaled = true
-
-    -- Fly toggle butonu
-    local flyButton = Instance.new("TextButton", mainPanel)
-    flyButton.Size = UDim2.new(0.45, 0, 0, 40)
-    flyButton.Position = UDim2.new(0.5, 0, 0, 0)
-    flyButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    flyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    flyButton.TextScaled = true
-    flyButton.Font = Enum.Font.GothamBold
-    flyButton.Text = "Fly: OFF"
-
-    -- WalkSpeed label ve input
-    local walkSpeedLabel = Instance.new("TextLabel", mainPanel)
-    walkSpeedLabel.Size = UDim2.new(0.45, 0, 0, 30)
-    walkSpeedLabel.Position = UDim2.new(0, 0, 0, 50)
-    walkSpeedLabel.BackgroundTransparency = 1
-    walkSpeedLabel.Text = "WalkSpeed"
-    walkSpeedLabel.Font = Enum.Font.Gotham
-    walkSpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    walkSpeedLabel.TextScaled = true
-
-    local walkSpeedInput = Instance.new("TextBox", mainPanel)
-    walkSpeedInput.Size = UDim2.new(0.45, 0, 0, 30)
-    walkSpeedInput.Position = UDim2.new(0.5, 0, 0, 50)
-    walkSpeedInput.Text = tostring(LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed or 16)
-    walkSpeedInput.Font = Enum.Font.Gotham
-    walkSpeedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
-    walkSpeedInput.TextScaled = true
-    walkSpeedInput.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    walkSpeedInput.ClearTextOnFocus = false
-
-    -- JumpPower label ve input
-    local jumpPowerLabel = Instance.new("TextLabel", mainPanel)
-    jumpPowerLabel.Size = UDim2.new(0.45, 0, 0, 30)
-    jumpPowerLabel.Position = UDim2.new(0, 0, 0, 90)
-    jumpPowerLabel.BackgroundTransparency = 1
-    jumpPowerLabel.Text = "JumpPower"
-    jumpPowerLabel.Font = Enum.Font.Gotham
-    jumpPowerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    jumpPowerLabel.TextScaled = true
-
-    local jumpPowerInput = Instance.new("TextBox", mainPanel)
-    jumpPowerInput.Size = UDim2.new(0.45, 0, 0, 30)
-    jumpPowerInput.Position = UDim2.new(0.5, 0, 0, 90)
-    jumpPowerInput.Text = tostring(LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower or 50)
-    jumpPowerInput.Font = Enum.Font.Gotham
-    jumpPowerInput.TextColor3 = Color3.fromRGB(0, 0, 0)
-    jumpPowerInput.TextScaled = true
-    jumpPowerInput.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    jumpPowerInput.ClearTextOnFocus = false
-
-    -- Butonların işlevleri
-
-    -- Fly toggle
-    flyButton.MouseButton1Click:Connect(function()
-        if Fly.Enabled then
-            Fly:Stop()
-            flyButton.Text = "Fly: OFF"
-            flyButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-        else
-            Fly:Start()
-            flyButton.Text = "Fly: ON"
-            flyButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        end
-    end)
-
-    -- WalkSpeed input değişikliği
-    walkSpeedInput.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            local speed = tonumber(walkSpeedInput.Text)
-            if speed and speed > 0 and LocalPlayer.Character then
-                local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.WalkSpeed = speed
-                end
-            else
-                -- Yanlış girişte eski değeri geri yaz
-                walkSpeedInput.Text = tostring(LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed or 16)
+Remote.OnServerEvent:Connect(function(player, action, data)
+    if action == "KillAll" then
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("Humanoid") then
+                p.Character.Humanoid.Health = 0
             end
         end
-    end)
-
-    -- JumpPower input değişikliği
-    jumpPowerInput.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            local jump = tonumber(jumpPowerInput.Text)
-            if jump and jump > 0 and LocalPlayer.Character then
-                local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jump
-                end
-            else
-                jumpPowerInput.Text = tostring(LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower or 50)
-            end
+    elseif action == "BroadcastMessage" and typeof(data) == "string" then
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            p:WaitForChild("PlayerGui")
+            local msg = Instance.new("Message", p.PlayerGui)
+            msg.Text = "[KiraTroll] " .. player.Name .. ": " .. data
+            task.delay(3, function() msg:Destroy() end)
         end
-    end)
-
-    -- Memo ve Kira butonları işlevleri
-    memoButton.MouseButton1Click:Connect(function()
-        questionFrame.Visible = false
-        mainPanel.Visible = true
-        -- Memo seçilince sadece GUI açılır, ekstra bir şey yok
-    end)
-
-    kiraButton.MouseButton1Click:Connect(function()
-        questionFrame.Visible = false
-        mainPanel.Visible = true
-        -- Kira seçilince Kırmızı ekran ve skybox uygulanır
-        createRedScreen()
-        setTrollSkybox()
-    end)
-
-    return screenGui
-end
-
--- Script başlatma
-createGUI()
-
--- Karakter değiştiğinde WalkSpeed ve JumpPower resetleme için:
-Players.LocalPlayer.CharacterAdded:Connect(function(character)
-    local humanoid = character:WaitForChild("Humanoid")
-    -- Varsayılan değerleri ayarlayalım
-    humanoid.WalkSpeed = 16
-    humanoid.JumpPower = 50
+    elseif action == "ChangeSkybox" then
+        local id = data
+        local sky = Instance.new("Sky")
+        for _, face in ipairs({"Bk", "Dn", "Ft", "Lf", "Rt", "Up"}) do
+            sky["Skybox" .. face] = "rbxassetid://" .. id
+        end
+        local Lighting = game:GetService("Lighting")
+        for _, obj in ipairs(Lighting:GetChildren()) do
+            if obj:IsA("Sky") then obj:Destroy() end
+        end
+        sky.Parent = Lighting
+    end
 end)
+
+return
+
+end
+
+-- Bu kısmı LOCAL tarafına (StarterPlayerScripts veya Executor ile) koy --
+
+local Players = game:GetService("Players") local ReplicatedStorage = game:GetService("ReplicatedStorage") local UIS = game:GetService("UserInputService") local RunService = game:GetService("RunService") local Lighting = game:GetService("Lighting") local LocalPlayer = Players.LocalPlayer local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local Remote = ReplicatedStorage:WaitForChild("KiraRemote")
+
+-- GUI -- local gui = Instance.new("ScreenGui", PlayerGui) local frame = Instance.new("Frame", gui) frame.Size = UDim2.new(0, 400, 0, 300) frame.Position = UDim2.new(0.5, -200, 0.5, -150) frame.BackgroundColor3 = Color3.fromRGB(25,25,25) frame.Active = true frame.Draggable = true
+
+local title = Instance.new("TextLabel", frame) title.Size = UDim2.new(1, 0, 0, 30) title.BackgroundColor3 = Color3.fromRGB(40,0,0) title.Text = "Kira Hack Troll" title.TextColor3 = Color3.new(1,0,0) title.TextScaled = true
+
+local minimize = Instance.new("TextButton", frame) minimize.Size = UDim2.new(0, 30, 0, 30) minimize.Position = UDim2.new(1, -60, 0, 0) minimize.Text = "_"
+
+local close = Instance.new("TextButton", frame) close.Size = UDim2.new(0, 30, 0, 30) close.Position = UDim2.new(1, -30, 0, 0) close.Text = "X"
+
+local tab1 = Instance.new("TextButton", frame) tab1.Size = UDim2.new(0.5, -2, 0, 30) tab1.Position = UDim2.new(0, 0, 0, 40) tab1.Text = "Local Player"
+
+local tab2 = Instance.new("TextButton", frame) tab2.Size = UDim2.new(0.5, -2, 0, 30) tab2.Position = UDim2.new(0.5, 2, 0, 40) tab2.Text = "Troll Hack"
+
+local localPanel = Instance.new("Frame", frame) localPanel.Position = UDim2.new(0,0,0,70) localPanel.Size = UDim2.new(1,0,1,-70) localPanel.Visible = true
+
+local trollPanel = Instance.new("Frame", frame) trollPanel.Position = UDim2.new(0,0,0,70) trollPanel.Size = UDim2.new(1,0,1,-70) trollPanel.Visible = false
+
+-- Local Panel -- local flyButton = Instance.new("TextButton", localPanel) flyButton.Size = UDim2.new(1, -20, 0, 40) flyButton.Position = UDim2.new(0, 10, 0, 10) flyButton.Text = "Fly: OFF"
+
+local speedBox = Instance.new("TextBox", localPanel) speedBox.Size = UDim2.new(0.5, -15, 0, 30) speedBox.Position = UDim2.new(0, 10, 0, 60) speedBox.Text = "WalkSpeed"
+
+local jumpBox = Instance.new("TextBox", localPanel) jumpBox.Size = UDim2.new(0.5, -15, 0, 30) jumpBox.Position = UDim2.new(0.5, 5, 0, 60) jumpBox.Text = "JumpPower"
+
+-- Troll Panel -- local skyboxButton = Instance.new("TextButton", trollPanel) skyboxButton.Size = UDim2.new(1, -20, 0, 30) skyboxButton.Position = UDim2.new(0, 10, 0, 10) skyboxButton.Text = "Set Troll Skybox"
+local msgBox = Instance.new("TextBox", trollPanel) msgBox.Size = UDim2.new(1, -20, 0, 30) msgBox.Position = UDim2.new(0, 10, 0, 50) msgBox.PlaceholderText = "Mesaj yaz..."
+local sendMsg = Instance.new("TextButton", trollPanel) sendMsg.Size = UDim2.new(1, -20, 0, 30) sendMsg.Position = UDim2.new(0, 10, 0, 90) sendMsg.Text = "Mesajı Yayınla"
+local killButton = Instance.new("TextButton", trollPanel) killButton.Size = UDim2.new(1, -20, 0, 30) killButton.Position = UDim2.new(0, 10, 0, 130) killButton.Text = "Kill All"
+
+-- Bağlantılar -- local flying = false local bodyGyro, bodyVel
+
+flyButton.MouseButton1Click:Connect(function() flying = not flying flyButton.Text = "Fly: " .. (flying and "ON" or "OFF")
+
+local char = LocalPlayer.Character
+if not char then return end
+local hrp = char:FindFirstChild("HumanoidRootPart")
+if not hrp then return end
+
+if flying then
+    bodyGyro = Instance.new("BodyGyro", hrp)
+    bodyVel = Instance.new("BodyVelocity", hrp)
+    bodyGyro.MaxTorque = Vector3.new(1e9,1e9,1e9)
+    bodyVel.MaxForce = Vector3.new(1e9,1e9,1e9)
+    RunService.RenderStepped:Connect(function()
+        if not flying then return end
+        local dir = Vector3.zero
+        if UIS:IsKeyDown(Enum.KeyCode.W) then dir = dir + workspace.CurrentCamera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then dir = dir - workspace.CurrentCamera.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then dir = dir - workspace.CurrentCamera.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then dir = dir + workspace.CurrentCamera.CFrame.RightVector end
+        bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+        bodyVel.Velocity = dir * 100
+    end)
+else
+    if bodyGyro then bodyGyro:Destroy() end
+    if bodyVel then bodyVel:Destroy() end
+end
+
+end)
+
+speedBox.FocusLost:Connect(function() local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") if hum then hum.WalkSpeed = tonumber(speedBox.Text) or 16 end end)
+
+jumpBox.FocusLost:Connect(function() local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") if hum then hum.JumpPower = tonumber(jumpBox.Text) or 50 end end)
+
+skyboxButton.MouseButton1Click:Connect(function() Remote:FireServer("ChangeSkybox", "90269177738915") end)
+
+sendMsg.MouseButton1Click:Connect(function() Remote:FireServer("BroadcastMessage", msgBox.Text) end)
+
+killButton.MouseButton1Click:Connect(function() Remote:FireServer("KillAll") end)
+
+tab1.MouseButton1Click:Connect(function() localPanel.Visible = true trollPanel.Visible = false end)
+
+tab2.MouseButton1Click:Connect(function() localPanel.Visible = false trollPanel.Visible = true end)
+
+minimize.MouseButton1Click:Connect(function() frame.Visible = false local openBtn = Instance.new("TextButton", gui) openBtn.Text = "Kira" openBtn.Size = UDim2.new(0, 80, 0, 30) openBtn.Position = UDim2.new(0, 10, 1, -40) openBtn.MouseButton1Click:Connect(function() frame.Visible = true openBtn:Destroy() end) end)
+
+close.MouseButton1Click:Connect(function() gui:Destroy() end)
+
